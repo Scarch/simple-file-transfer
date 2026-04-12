@@ -1,3 +1,11 @@
+# IDE directories
+.idea/
+.vscode/
+
+# Asio files
+lib/asio/*
+!lib/asio/.gitkeep
+
 # Prerequisites
 *.d
 
