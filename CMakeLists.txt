@@ -15,16 +15,16 @@ include_directories(inc)
 # Required for asynchronous work
 find_package(Threads REQUIRED)
 
-add_executable(failiedastus
+add_executable(simple-file-transfer
         main.cpp
         src/Server.cpp
         src/Client.cpp
         src/FileHandler.cpp
 )
 
-target_link_libraries(failiedastus PRIVATE Threads::Threads)
+target_link_libraries(simple-file-transfer PRIVATE Threads::Threads)
 
 # Windows support
 if(WIN32)
-    target_link_libraries(failiedastus PRIVATE ws2_32 mswsock)
+    target_link_libraries(simple-file-transfer PRIVATE ws2_32 mswsock)
 endif()
