@@ -7,7 +7,6 @@ namespace fs = std::filesystem;
 
 class FileHandler {
 public:
-
     enum class Mode {
         CLOSED,
         READ,
