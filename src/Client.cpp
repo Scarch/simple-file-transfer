@@ -26,7 +26,6 @@ void Client::sendFile(const std::string &filePath) {
 }
 
 bool Client::sendMetadata(FileHandler &file) {
-    // First we send the file name
     std::string fileName = file.getFileName();
 
     // We send the file name length for the server before the name itself
@@ -34,7 +33,7 @@ bool Client::sendMetadata(FileHandler &file) {
     uint32_t networkFileNameLength = htonl(fileNameLength);
     asio::write(m_socket, asio::buffer(&networkFileNameLength, sizeof(networkFileNameLength)));
 
-    // Then we send the file name
+    // Then we send the actual file name
     asio::write(m_socket, asio::buffer(fileName));
 
     // Now we send the file size
