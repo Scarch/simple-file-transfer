@@ -30,7 +30,7 @@ void Server::start() {
     while (amountOfDataLeft > 0) {
         const uint64_t amountOfDataToWrite = std::min(static_cast<uint64_t>(FileHandler::BUFFER_SIZE), amountOfDataLeft);
         asio::read(socket, asio::buffer(writeBuffer, amountOfDataToWrite));
-        fileHandler.writeChunk(writeBuffer, amountOfDataToWrite);
+        fileHandler.writeChunk(writeBuffer, amountOfDataToWrite); // TODO: account for situations where writing might have failed (return value is false)
         amountOfDataLeft = amountOfDataLeft - amountOfDataToWrite;
     }
 }
