@@ -19,6 +19,8 @@ void Server::start() {
     m_acceptor.accept(socket);
 
     FileHandler fileHandler = receiveMetadata(socket);
+
+    // TODO: Add try-except for cases when issues might arise (and warn the client accordingly so they don't start sending data that we can't receive)
     fileHandler.openForWrite();
 
     std::vector<char> writeBuffer(FileHandler::BUFFER_SIZE);
@@ -37,8 +39,8 @@ FileHandler Server::receiveMetadata(tcp::socket &socket) const {
     uint32_t networkFileNameLength = 0;
     asio::read(socket, asio::buffer(&networkFileNameLength, sizeof(networkFileNameLength)));
 
-    // Convert the fileLength to host endianness
-    uint32_t fileNameLength = ntohl(networkFileNameLength);
+    // Convert fileLength to host endianness
+    const uint32_t fileNameLength = ntohl(networkFileNameLength);
 
     // Then we receive the name itself
     std::string fileName{};
@@ -46,8 +48,11 @@ FileHandler Server::receiveMetadata(tcp::socket &socket) const {
     asio::read(socket, asio::buffer(fileName, fileNameLength));
 
     // Last thing we receive is the file size
-    uint64_t fileSize = 0;
-    asio::read(socket, asio::buffer(&fileSize, sizeof(fileSize)));
+    uint64_t networkFileSize = 0;
+    asio::read(socket, asio::buffer(&networkFileSize, sizeof(networkFileSize)));
+
+    // Convert fileSize to host endianness
+    const uint64_t fileSize = networkToHost64(networkFileSize);
 
     FileHandler fileHandler(m_outputDirectory, FileMetadata(fileName, fileSize));
     return fileHandler;
