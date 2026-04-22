@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 // We give m_fileSize a base value (real value depends on if we're receiving or sending a file and whether the file exists)
-FileHandler::FileHandler(const std::string &filePath) : m_filePath(filePath), m_fileSize(0) {
+FileHandler::FileHandler(const std::string &filePath) : m_filePath(filePath), m_fileMetadata(m_filePath.filename(), 0) {
 }
 
 void FileHandler::openForRead() {
@@ -21,7 +21,7 @@ void FileHandler::openForRead() {
         throw std::runtime_error("Failed to open file for reading (possible permission issue or locked file).");
     }
 
-    m_fileSize = fs::file_size(m_filePath);
+    m_fileMetadata.fileSize = fs::file_size(m_filePath);
     m_currentMode = Mode::READ;
 }
 

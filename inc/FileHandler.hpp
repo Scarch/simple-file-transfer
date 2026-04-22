@@ -5,6 +5,11 @@
 
 namespace fs = std::filesystem;
 
+struct FileMetadata {
+    std::string fileName;
+    uintmax_t fileSize;
+};
+
 class FileHandler {
 public:
     enum class Mode {
@@ -27,7 +32,7 @@ public:
 
 private:
     fs::path m_filePath;
-    uintmax_t m_fileSize;
+    FileMetadata m_fileMetadata;
     std::fstream m_fileStream{};
     Mode m_currentMode{Mode::CLOSED};
 };
