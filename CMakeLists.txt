@@ -20,6 +20,7 @@ add_executable(simple-file-transfer
         src/Server.cpp
         src/Client.cpp
         src/FileHandler.cpp
+        src/Protocol.cpp
 )
 
 target_link_libraries(simple-file-transfer PRIVATE Threads::Threads)
