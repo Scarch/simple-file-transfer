@@ -17,5 +17,5 @@ private:
     asio::io_context &m_io_context;
     tcp::socket m_socket;
 
-    bool sendMetadata();
+    bool sendMetadata(FileHandler& file);
 };

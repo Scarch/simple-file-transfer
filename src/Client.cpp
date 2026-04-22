@@ -11,6 +11,10 @@ void Client::sendFile(const std::string &filePath) {
     const tcp::endpoint endpoint{m_serverIp, m_serverPort};
     m_socket.connect(endpoint);
 
-    
+    FileHandler file(filePath);
+    file.openForRead();
+    sendMetadata(file);
+
+    std::vector<char> readBuffer(FileHandler::BUFFER_SIZE);
 
 }
