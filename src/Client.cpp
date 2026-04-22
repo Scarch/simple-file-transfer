@@ -11,10 +11,16 @@ void Client::sendFile(const std::string &filePath) {
     const tcp::endpoint endpoint{m_serverIp, m_serverPort};
     m_socket.connect(endpoint);
 
-    FileHandler file(filePath);
-    file.openForRead();
-    sendMetadata(file);
+    FileHandler fileHandler(filePath);
+    fileHandler.openForRead();
+    sendMetadata(fileHandler);
 
     std::vector<char> readBuffer(FileHandler::BUFFER_SIZE);
+    size_t bytesRead = 0;
+
+    while ((bytesRead = fileHandler.readChunk(readBuffer)) > 0) {
+        // We read only the necessary amount of data (bytesRead) from the buffer
+        asio::write(m_socket, asio::buffer(readBuffer.data(), bytesRead));
+    }
 
 }
