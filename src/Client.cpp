@@ -1,4 +1,5 @@
 #include "Client.hpp"
+#include "Protocol.hpp"
 using asio::ip::tcp;
 
 Client::Client(const std::string &serverIp, int serverPort, asio::io_context &io_context) : m_serverIp(asio::ip::make_address(serverIp)),
@@ -27,6 +28,28 @@ void Client::sendFile(const std::string &filePath) {
 
 bool Client::sendMetadata(FileHandler &file) {
 
+    // First we send the file name
+    std::string fileName = file.getFileName();
+
+    // We send the file name length for the server before the name itself
+    const uint32_t fileNameLength = fileName.length();
+    uint32_t networkFileNameLength = htonl(fileNameLength);
+    asio::write(m_socket, asio::buffer(&networkFileNameLength, sizeof(networkFileNameLength)));
+
+    // Then we send the file name
+    asio::write(m_socket, asio::buffer(fileName));
+
+    // Now we send the file size
     // To account for OS-specific byte-ordering, we need to make sure data is sent independent of OS
-    //uintmax_t networkFileSize = htonl();
+    uint64_t networkFileSize = hostToNetwork64(file.getFileSize());
+    asio::write(m_socket, asio::buffer(&networkFileSize, sizeof(networkFileSize)));
+
+    // TODO: add some sort of functionality so that client receives feedback from server whether server is ready to receive file data
+    // ...
+    // if (...) {
+    //     return false;
+    // }
+
+    return true;
+
 }
