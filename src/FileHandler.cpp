@@ -61,6 +61,21 @@ size_t FileHandler::readChunk(std::vector<char> &buffer) {
     return m_fileStream.gcount();
 }
 
+bool FileHandler::writeChunk(const std::vector<char> &buffer, size_t bytesToWrite) {
+    if (m_currentMode != Mode::WRITE) {
+        throw std::logic_error("File not open for writing");
+    }
+
+    m_fileStream.write(buffer.data(), static_cast<std::streamsize>(bytesToWrite));
+
+    // We check if writing failed
+    if (m_fileStream.fail()) {
+        return false;
+    }
+
+    return true;
+}
+
 std::string FileHandler::getFileName() const {
     return m_fileMetadata.fileName;
 }
