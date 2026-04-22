@@ -39,3 +39,16 @@ void FileHandler::openForWrite() {
 
     m_currentMode = Mode::WRITE;
 }
+
+size_t FileHandler::readChunk(std::vector<char> &buffer) {
+    if (m_currentMode != Mode::READ) {
+        throw std::logic_error("File not open for reading");
+    }
+
+    // We provide buffer.data() since the read function requires a pointer
+    // buffer.begin() provides an iterator which is incompatible
+    m_fileStream.read(buffer.data(), BUFFER_SIZE);
+
+    // We return the amount of bytes read in the last operation
+    return m_fileStream.gcount();
+}
