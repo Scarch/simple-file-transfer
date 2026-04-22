@@ -2,13 +2,13 @@
 #include "Protocol.hpp"
 using asio::ip::tcp;
 
-Client::Client(const std::string &serverIp, int serverPort, asio::io_context &io_context) : m_serverIp(asio::ip::make_address(serverIp)),
-    m_serverPort(serverPort), m_io_context(io_context),
-    m_socket(m_io_context) {
+Client::Client(const std::string &serverIp, int serverPort,
+               asio::io_context &io_context) : m_serverIp(asio::ip::make_address(serverIp)),
+                                               m_serverPort(serverPort), m_io_context(io_context),
+                                               m_socket(m_io_context) {
 }
 
 void Client::sendFile(const std::string &filePath) {
-
     const tcp::endpoint endpoint{m_serverIp, m_serverPort};
     m_socket.connect(endpoint);
 
@@ -23,11 +23,9 @@ void Client::sendFile(const std::string &filePath) {
         // We read only the necessary amount of data (bytesRead) from the buffer
         asio::write(m_socket, asio::buffer(readBuffer.data(), bytesRead));
     }
-
 }
 
 bool Client::sendMetadata(FileHandler &file) {
-
     // First we send the file name
     std::string fileName = file.getFileName();
 
@@ -51,5 +49,4 @@ bool Client::sendMetadata(FileHandler &file) {
     // }
 
     return true;
-
 }
