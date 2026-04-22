@@ -22,6 +22,8 @@ public:
 
     explicit FileHandler(const std::string &filePath);
 
+    explicit FileHandler(const fs::path &directory, const FileMetadata &fileMetadata);
+
     void openForRead();
 
     void openForWrite();
@@ -29,6 +31,10 @@ public:
     size_t readChunk(std::vector<char> &buffer);
 
     bool writeChunk(const std::vector<char> &buffer, size_t bytesToWrite);
+
+    [[nodiscard]] std::string getFileName() const;
+
+    [[nodiscard]] uintmax_t getFileSize() const;
 
 private:
     fs::path m_filePath;

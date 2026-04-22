@@ -6,6 +6,10 @@
 FileHandler::FileHandler(const std::string &filePath) : m_filePath(filePath), m_fileMetadata(m_filePath.filename(), 0) {
 }
 
+FileHandler::FileHandler(const fs::path &directory, const FileMetadata &fileMetadata) : m_filePath(
+    directory / fileMetadata.fileName), m_fileMetadata(fileMetadata) {
+}
+
 void FileHandler::openForRead() {
     if (!fs::exists(m_filePath)) {
         throw std::invalid_argument("File does not exist");
@@ -51,4 +55,12 @@ size_t FileHandler::readChunk(std::vector<char> &buffer) {
 
     // We return the amount of bytes read in the last operation
     return m_fileStream.gcount();
+}
+
+std::string FileHandler::getFileName() const {
+    return m_fileMetadata.fileName;
+}
+
+uintmax_t FileHandler::getFileSize() const {
+    return m_fileMetadata.fileSize;
 }
