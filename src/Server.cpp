@@ -2,6 +2,7 @@
 #include "Protocol.hpp"
 
 #include <stdexcept>
+#include <vector>
 
 
 Server::Server(const std::string &outputDirectory, int port, asio::io_context &io_context) : m_port(port),
@@ -10,6 +11,24 @@ Server::Server(const std::string &outputDirectory, int port, asio::io_context &i
     m_outputDirectory(outputDirectory) {
     if (fs::exists(m_outputDirectory) && !fs::is_directory(m_outputDirectory)) {
         throw std::invalid_argument("Folder destination is occupied with non-directory element");
+    }
+}
+
+void Server::start() {
+    tcp::socket socket(m_io_context);
+    m_acceptor.accept(socket);
+
+    FileHandler fileHandler = receiveMetadata(socket);
+    fileHandler.openForWrite();
+
+    std::vector<char> writeBuffer(FileHandler::BUFFER_SIZE);
+    uint64_t amountOfDataLeft = fileHandler.getFileSize();
+
+    while (amountOfDataLeft > 0) {
+        const uint64_t amountOfDataToWrite = std::min(static_cast<uint64_t>(FileHandler::BUFFER_SIZE), amountOfDataLeft);
+        asio::read(socket, asio::buffer(writeBuffer, amountOfDataToWrite));
+        fileHandler.writeChunk(writeBuffer, amountOfDataToWrite);
+        amountOfDataLeft = amountOfDataLeft - amountOfDataToWrite;
     }
 }
 
