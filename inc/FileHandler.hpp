@@ -7,7 +7,7 @@ namespace fs = std::filesystem;
 
 struct FileMetadata {
     std::string fileName;
-    uintmax_t fileSize;
+    uint64_t fileSize;
 };
 
 class FileHandler {
@@ -34,7 +34,7 @@ public:
 
     [[nodiscard]] std::string getFileName() const;
 
-    [[nodiscard]] uintmax_t getFileSize() const;
+    [[nodiscard]] uint64_t getFileSize() const;
 
 private:
     fs::path m_filePath;

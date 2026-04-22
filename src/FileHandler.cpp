@@ -61,6 +61,6 @@ std::string FileHandler::getFileName() const {
     return m_fileMetadata.fileName;
 }
 
-uintmax_t FileHandler::getFileSize() const {
+uint64_t FileHandler::getFileSize() const {
     return m_fileMetadata.fileSize;
 }
