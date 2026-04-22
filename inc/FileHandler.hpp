@@ -24,6 +24,18 @@ public:
 
     explicit FileHandler(const fs::path &directory, const FileMetadata &fileMetadata);
 
+    ~FileHandler();
+
+    // We disable copying due to how fstream can't be copied
+    FileHandler(const FileHandler &) = delete;
+
+    FileHandler &operator=(const FileHandler &) = delete;
+
+    // We explicitly allow moving
+    FileHandler(FileHandler &&other) noexcept = default;
+
+    FileHandler &operator=(FileHandler &&other) noexcept = default;
+
     void openForRead();
 
     void openForWrite();

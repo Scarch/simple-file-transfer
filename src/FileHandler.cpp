@@ -7,7 +7,11 @@ FileHandler::FileHandler(const std::string &filePath) : m_filePath(filePath), m_
 }
 
 FileHandler::FileHandler(const fs::path &directory, const FileMetadata &fileMetadata) : m_filePath(
-    directory / fileMetadata.fileName), m_fileMetadata(fileMetadata) {
+        directory / fileMetadata.fileName), m_fileMetadata(fileMetadata) {
+}
+
+FileHandler::~FileHandler() {
+    m_fileStream.close();
 }
 
 void FileHandler::openForRead() {
