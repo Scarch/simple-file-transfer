@@ -20,5 +20,5 @@ private:
     tcp::acceptor m_acceptor;
     fs::path m_outputDirectory;
 
-    FileHandler receiveMetadata(tcp::socket &socket) const;
+    static FileMetadata receiveMetadata(tcp::socket &socket);
 };

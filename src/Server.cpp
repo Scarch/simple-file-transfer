@@ -18,7 +18,8 @@ void Server::start() {
     tcp::socket socket(m_io_context);
     m_acceptor.accept(socket);
 
-    FileHandler fileHandler = receiveMetadata(socket);
+    const FileMetadata incomingFile = receiveMetadata(socket);
+    FileHandler fileHandler(m_outputDirectory, incomingFile);
 
     // TODO: Add try-except for cases when issues might arise (and warn the client accordingly so they don't start sending data that we can't receive)
     fileHandler.openForWrite();
@@ -34,7 +35,7 @@ void Server::start() {
     }
 }
 
-FileHandler Server::receiveMetadata(tcp::socket &socket) const {
+FileMetadata Server::receiveMetadata(tcp::socket &socket) {
     // First we receive the length of the file name
     uint32_t networkFileNameLength = 0;
     asio::read(socket, asio::buffer(&networkFileNameLength, sizeof(networkFileNameLength)));
@@ -54,6 +55,5 @@ FileHandler Server::receiveMetadata(tcp::socket &socket) const {
     // Convert fileSize to host endianness
     const uint64_t fileSize = networkToHost64(networkFileSize);
 
-    FileHandler fileHandler(m_outputDirectory, FileMetadata(fileName, fileSize));
-    return fileHandler;
+    return FileMetadata(fileName, fileSize);
 }
