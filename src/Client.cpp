@@ -24,3 +24,9 @@ void Client::sendFile(const std::string &filePath) {
     }
 
 }
+
+bool Client::sendMetadata(FileHandler &file) {
+
+    // To account for OS-specific byte-ordering, we need to make sure data is sent independent of OS
+    //uintmax_t networkFileSize = htonl();
+}
