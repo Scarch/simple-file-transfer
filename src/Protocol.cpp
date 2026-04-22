@@ -18,7 +18,7 @@ inline uint64_t hostToNetwork64(uint64_t value) {
     if constexpr (std::endian::native == std::endian::big) {
         return value; // The host is already big-endian
     } else {
-        return __builtin_bswap64(value); // GCC and clang specific builtin
+        return swapBytes64(value);
     }
 }
 
@@ -26,6 +26,6 @@ inline uint64_t networkToHost64(uint64_t value) {
     if constexpr (std::endian::native == std::endian::big) {
         return value;
     } else {
-        return __builtin_bswap64(value); // GCC and clang specific builtin
+        return swapBytes64(value);
     }
 }
