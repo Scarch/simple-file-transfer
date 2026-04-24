@@ -19,6 +19,7 @@ add_executable(simple-file-transfer
         main.cpp
         src/Server.cpp
         src/Client.cpp
+        src/CliParser.cpp
         src/FileHandler.cpp
 )
 
