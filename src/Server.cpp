@@ -1,9 +1,25 @@
 #include "Server.hpp"
 #include "Protocol.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 #include <vector>
 
+// Use namespace so that isSafeFileName is only available in Server.cpp and doesn't conflict elsewhere
+namespace {
+    bool isSafeFileName(const std::string &fileName) {
+        if (fileName.empty() || fileName == "." || fileName == "..") {
+            return false;
+        }
+
+        if (fileName.find('\0') != std::string::npos || fileName.find('\\') != std::string::npos) {
+            return false;
+        }
+
+        const fs::path candidate(fileName);
+        return !candidate.is_absolute() && !candidate.has_parent_path() && candidate.filename() == candidate;
+    }
+}
 
 Server::Server(const std::string &outputDirectory, int port, asio::io_context &io_context) : m_port(port),
     m_io_context(io_context), m_acceptor(tcp::acceptor(
@@ -28,9 +44,15 @@ void Server::start() {
     uint64_t amountOfDataLeft = fileHandler.getFileSize();
 
     while (amountOfDataLeft > 0) {
-        const uint64_t amountOfDataToWrite = std::min(static_cast<uint64_t>(FileHandler::BUFFER_SIZE), amountOfDataLeft);
+        const uint64_t amountOfDataToWrite =
+                std::min(static_cast<uint64_t>(FileHandler::BUFFER_SIZE), amountOfDataLeft);
         asio::read(socket, asio::buffer(writeBuffer, amountOfDataToWrite));
-        fileHandler.writeChunk(writeBuffer, amountOfDataToWrite); // TODO: account for situations where writing might have failed (return value is false)
+
+        if (!fileHandler.writeChunk(writeBuffer, amountOfDataToWrite)) {
+            // TODO: send an explicit failure response to the client once protocol-level acks/errors are implemented.
+            throw std::runtime_error("Failed to write received data to disk");
+        }
+
         amountOfDataLeft = amountOfDataLeft - amountOfDataToWrite;
     }
 }
@@ -43,10 +65,18 @@ FileMetadata Server::receiveMetadata(tcp::socket &socket) {
     // Convert fileLength to host endianness
     const uint32_t fileNameLength = ntohl(networkFileNameLength);
 
+    if (fileNameLength == 0 || fileNameLength > MAX_FILENAME_LENGTH) {
+        throw std::invalid_argument("Invalid file name length");
+    }
+
     // Then we receive the name itself
     std::string fileName{};
     fileName.resize(fileNameLength);
     asio::read(socket, asio::buffer(fileName, fileNameLength));
+
+    if (!isSafeFileName(fileName)) {
+        throw std::invalid_argument("Unsafe file name in metadata");
+    }
 
     // Last thing we receive is the file size
     uint64_t networkFileSize = 0;

@@ -3,6 +3,7 @@
 #include "FileHandler.hpp"
 #include <asio.hpp>
 #include <filesystem>
+#include <cstdint>
 
 namespace fs = std::filesystem;
 using asio::ip::tcp;
@@ -15,6 +16,8 @@ public:
     void start();
 
 private:
+    static constexpr uint32_t MAX_FILENAME_LENGTH{255};
+
     asio::ip::port_type m_port;
     asio::io_context &m_io_context;
     tcp::acceptor m_acceptor;
