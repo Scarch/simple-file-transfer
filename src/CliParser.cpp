@@ -14,7 +14,7 @@ std::optional<CliArguments> parse(int argc, char* argv[]) {
     CliArguments args;
 
     if (argc == 1) {
-        std::cerr << "Kasutamine:\n"
+        std::cerr << "Usage:\n"
                   << "--ip <aadress> -p <port> (--send|--receive) [--file <path>]\n";
         return std::nullopt;
     }
@@ -24,19 +24,19 @@ std::optional<CliArguments> parse(int argc, char* argv[]) {
 
         // HELP
         if (arg == "--help" || arg == "-h") {
-            std::cout << "Kasutamine:\n"
+            std::cout << "Usage:\n"
                       << "  --ip <aadress>\n"
                       << "  -p, --port <port>\n"
                       << "  -s, --send\n"
                       << "  -r, --receive\n"
-                      << "  -f, --file <path> (vajalik send mode puhul)\n";
+                      << "  -f, --file <path> (needed for send mode)\n";
             return std::nullopt;
         }
 
         // IP
         if (arg == "--ip") {
             if (i + 1 >= argc) {
-                std::cerr << "Viga: --ip vajab väärtust\n";
+                std::cerr << "Error: --ip needs a value\n";
                 return std::nullopt;
             }
             args.ip = argv[++i];
@@ -45,18 +45,18 @@ std::optional<CliArguments> parse(int argc, char* argv[]) {
         // PORT
         else if (arg == "-p" || arg == "--port") {
             if (i + 1 >= argc) {
-                std::cerr << "Viga: --port vajab väärtust\n";
+                std::cerr << "Error: --port needs a value\n";
                 return std::nullopt;
             }
             try {
                 args.port = std::stoi(argv[++i]);
             } catch (...) {
-                std::cerr << "Viga: port peab olema number\n";
+                std::cerr << "Error: port must be a number\n";
                 return std::nullopt;
             }
 
             if (args.port <= 0 || args.port > 65535) {
-                std::cerr << "Viga: port peab olema vahemikus 1-65535\n";
+                std::cerr << "Error: port must be between 1-65535\n";
                 return std::nullopt;
             }
         }
@@ -64,7 +64,7 @@ std::optional<CliArguments> parse(int argc, char* argv[]) {
         // SEND
         else if (arg == "--send" || arg == "-s") {
             if (args.mode != Mode::Unknown) {
-                std::cerr << "Viga: vali kas send VÕI receive\n";
+                std::cerr << "Error: choose send OR receive\n";
                 return std::nullopt;
             }
             args.mode = Mode::Send;
@@ -73,7 +73,7 @@ std::optional<CliArguments> parse(int argc, char* argv[]) {
         // RECEIVE
         else if (arg == "--receive" || arg == "-r") {
             if (args.mode != Mode::Unknown) {
-                std::cerr << "Viga: vali kas send VÕI receive\n";
+                std::cerr << "Error: choose send OR receive\n";
                 return std::nullopt;
             }
             args.mode = Mode::Receive;
@@ -82,7 +82,7 @@ std::optional<CliArguments> parse(int argc, char* argv[]) {
         // FILE
         else if (arg == "--file" || arg == "-f") {
             if (i + 1 >= argc) {
-                std::cerr << "Viga: --file vajab väärtust\n";
+                std::cerr << "Error: --file needs a value\n";
                 return std::nullopt;
             }
             args.filePath = argv[++i];
@@ -90,35 +90,35 @@ std::optional<CliArguments> parse(int argc, char* argv[]) {
 
         // UNKNOWN
         else {
-            std::cerr << "Tundmatu argument: " << arg << "\n";
+            std::cerr << "Unknown argument: " << arg << "\n";
             return std::nullopt;
         }
     }
 
-    // Valideerimine
+    // -- Validation --
 
     if (args.ip.empty()) {
-        std::cerr << "Viga: IP puudub\n";
+        std::cerr << "Error: IP is missing\n";
         return std::nullopt;
     }
 
     if (!isValidIp(args.ip)) {
-        std::cerr << "Viga: vigane IP aadress\n";
+        std::cerr << "Error: faulty IP aadress\n";
         return std::nullopt;
     }
 
     if (args.port == 0) {
-        std::cerr << "Viga: port puudub\n";
+        std::cerr << "Error: port is missing\n";
         return std::nullopt;
     }
 
     if (args.mode == Mode::Unknown) {
-        std::cerr << "Viga: mode puudub (--send või --receive)\n";
+        std::cerr << "Error: mode is missing (--send or --receive)\n";
         return std::nullopt;
     }
 
     if (args.mode == Mode::Send && args.filePath.empty()) {
-        std::cerr << "Viga: send mode nõuab faili (--file)\n";
+        std::cerr << "Error: send mode requires a file (--file)\n";
         return std::nullopt;
     }
 
