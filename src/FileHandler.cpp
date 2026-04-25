@@ -53,17 +53,32 @@ size_t FileHandler::readChunk(std::vector<char> &buffer) {
         throw std::logic_error("File not open for reading");
     }
 
+    // We do a check on the buffer to see whether it is ready for use
+    if (buffer.empty()) {
+        throw std::invalid_argument("Buffer cannot be empty");
+    }
+    // Make sure that we don't try to write into a buffer that isn't as big as BUFFER_SIZE
+    const std::streamsize toRead = static_cast<std::streamsize>(std::min(buffer.size(), BUFFER_SIZE));
+
     // We provide buffer.data() since the read function requires a pointer
     // buffer.begin() provides an iterator which is incompatible
-    m_fileStream.read(buffer.data(), BUFFER_SIZE);
+    m_fileStream.read(buffer.data(), toRead);
 
     // We return the amount of bytes read in the last operation
-    return m_fileStream.gcount();
+    return static_cast<size_t>(m_fileStream.gcount());
 }
 
 bool FileHandler::writeChunk(const std::vector<char> &buffer, size_t bytesToWrite) {
     if (m_currentMode != Mode::WRITE) {
         throw std::logic_error("File not open for writing");
+    }
+
+    if (bytesToWrite > buffer.size()) {
+        throw std::invalid_argument("bytesToWrite exceeds buffer size");
+    }
+
+    if (bytesToWrite == 0) {
+        return true;
     }
 
     m_fileStream.write(buffer.data(), static_cast<std::streamsize>(bytesToWrite));
