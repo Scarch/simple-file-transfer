@@ -36,8 +36,16 @@ void FileHandler::openForRead() {
 
 void FileHandler::openForWrite() {
     // TODO: add safe overwrite handling
+
     if (fs::exists(m_filePath)) {
-        throw std::invalid_argument("File already exists");
+        if (fs::is_directory(m_filePath)) {
+            throw std::runtime_error("Target path is a directory");
+        }
+        throw std::runtime_error("File already exists");
+    }
+
+    if (const fs::path parent = m_filePath.parent_path(); !parent.empty() && !fs::exists(parent)) {
+        throw std::runtime_error("Parent directory does not exist");
     }
 
     m_fileStream.open(m_filePath, std::ios::out | std::ios::trunc | std::ios::binary);
