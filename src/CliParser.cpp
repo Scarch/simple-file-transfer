@@ -15,7 +15,7 @@ std::optional<CliArguments> parse(int argc, char* argv[]) {
 
     if (argc == 1) {
         std::cerr << "Usage:\n"
-                  << "--ip <aadress> -p <port> (--send|--receive) [--file <path>]\n";
+                  << "--ip <address> -p <port> (--send|--receive) [--file <path>]\n";
         return std::nullopt;
     }
 
@@ -25,7 +25,7 @@ std::optional<CliArguments> parse(int argc, char* argv[]) {
         // HELP
         if (arg == "--help" || arg == "-h") {
             std::cout << "Usage:\n"
-                      << "  --ip <aadress>\n"
+                      << "  --ip <address>\n"
                       << "  -p, --port <port>\n"
                       << "  -s, --send\n"
                       << "  -r, --receive\n"
@@ -103,7 +103,7 @@ std::optional<CliArguments> parse(int argc, char* argv[]) {
     }
 
     if (!isValidIp(args.ip)) {
-        std::cerr << "Error: faulty IP aadress\n";
+        std::cerr << "Error: faulty IP address\n";
         return std::nullopt;
     }
 
