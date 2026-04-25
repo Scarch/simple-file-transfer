@@ -84,11 +84,7 @@ bool FileHandler::writeChunk(const std::vector<char> &buffer, size_t bytesToWrit
     m_fileStream.write(buffer.data(), static_cast<std::streamsize>(bytesToWrite));
 
     // We check if writing failed
-    if (m_fileStream.fail()) {
-        return false;
-    }
-
-    return true;
+    return !m_fileStream.fail();
 }
 
 std::string FileHandler::getFileName() const {
