@@ -9,11 +9,19 @@ Client::Client(const std::string &serverIp, int serverPort,
 }
 
 void Client::sendFile(const std::string &filePath) {
+    // We start each sending operation with a "fresh" socket
+    if (m_socket.is_open()) {
+        m_socket.close();
+    }
+    m_socket = tcp::socket(m_io_context);
+
     const tcp::endpoint endpoint{m_serverIp, m_serverPort};
     m_socket.connect(endpoint);
 
     FileHandler fileHandler(filePath);
     fileHandler.openForRead();
+
+    // TODO: account for situations wheere sendMetadata might return false
     sendMetadata(fileHandler);
 
     std::vector<char> readBuffer(FileHandler::BUFFER_SIZE);
