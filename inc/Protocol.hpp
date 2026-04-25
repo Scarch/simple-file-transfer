@@ -1,5 +1,6 @@
 #pragma once
 #include <asio.hpp>
+#include <bit>
 
 // Problem: https://stackoverflow.com/questions/3022552/is-there-any-standard-htonl-like-function-for-64-bits-integers-in-c
 
