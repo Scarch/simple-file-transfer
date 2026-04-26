@@ -1,4 +1,3 @@
-- Sten-Egert Märtson
 # A Simple C++ File Transfer Tool
 
 Authors:
