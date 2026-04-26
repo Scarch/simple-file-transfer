@@ -21,7 +21,7 @@ void Client::sendFile(const std::string &filePath) {
     FileHandler fileHandler(filePath);
     fileHandler.openForRead();
 
-    // TODO: account for situations wheere sendMetadata might return false
+    // TODO: account for situations where sendMetadata might return false
     sendMetadata(fileHandler);
 
     std::vector<char> readBuffer(FileHandler::BUFFER_SIZE);
