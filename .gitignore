@@ -2,6 +2,10 @@
 .idea/
 .vscode/
 
+# CMake build directories
+build/
+cmake-build-*/
+
 # Asio files
 lib/asio/*
 !lib/asio/.gitkeep
