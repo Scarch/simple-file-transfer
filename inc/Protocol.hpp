@@ -14,34 +14,35 @@ enum class ErrorCode : uint8_t {
     Unknown,
     WriteFailed,
     InvalidPath,
+    InvalidFile,
 };
 
-constexpr uint32_t MAX_ERROR_MESSAGE_LENGTH{1024};
+constexpr uint32_t MAX_ERROR_MESSAGE_LENGTH{65535};
 
 struct ErrorInfo {
     ErrorCode errorCode;
     std::string message;
 };
 
-inline void sendStatus(asio::ip::tcp::socket& socket, Status status) {
+inline void sendStatus(asio::ip::tcp::socket &socket, Status status) {
     // Status is 1 byte so there's no need to use htonl() to convert endianness
     asio::write(socket, asio::buffer(&status, sizeof(status)));
 }
 
-inline void sendError(asio::ip::tcp::socket& socket, ErrorCode errorCode, const std::string& errorMessage) {
+inline void sendError(asio::ip::tcp::socket &socket, ErrorCode errorCode, const std::string &errorMessage) {
     sendStatus(socket, Status::Error);
 
     // errorCode is 1 byte so there's no need to use htonl() to convert endianness
     asio::write(socket, asio::buffer(&errorCode, sizeof(errorCode)));
 
     const auto errorMessageLength = static_cast<uint32_t>(errorMessage.length());
-    uint32_t networkErrorMessageLength = htonl(errorMessageLength);
+    const uint32_t networkErrorMessageLength = htonl(errorMessageLength);
     asio::write(socket, asio::buffer(&networkErrorMessageLength, sizeof(networkErrorMessageLength)));
 
     asio::write(socket, asio::buffer(errorMessage));
 }
 
-inline Status receiveStatus(asio::ip::tcp::socket& socket) {
+inline Status receiveStatus(asio::ip::tcp::socket &socket) {
     uint8_t rawStatus{};
     asio::read(socket, asio::buffer(&rawStatus, sizeof(rawStatus)));
 
@@ -53,7 +54,7 @@ inline Status receiveStatus(asio::ip::tcp::socket& socket) {
     return static_cast<Status>(rawStatus);
 }
 
-inline ErrorInfo receiveError(asio::ip::tcp::socket& socket) {
+inline ErrorInfo receiveError(asio::ip::tcp::socket &socket) {
     // We assume the status has already been received
 
     uint8_t rawErrorCode{};
@@ -76,6 +77,22 @@ inline ErrorInfo receiveError(asio::ip::tcp::socket& socket) {
     return ErrorInfo{errorCode, errorMessage};
 }
 
+inline std::string getSimpleErrorMessage(ErrorCode errorCode) {
+    switch (errorCode) {
+        case ErrorCode::InvalidPath: {
+            return "Peer ran into invalid path error";
+        }
+        case ErrorCode::Unknown: {
+            return "Peer ran into an unknown error";
+        }
+        case ErrorCode::WriteFailed: {
+            return "Peer ran into a file writing error";
+        }
+        default: {
+            return "Peer ran into an unrecognized error";
+        }
+    }
+}
 
 // Problem: https://stackoverflow.com/questions/3022552/is-there-any-standard-htonl-like-function-for-64-bits-integers-in-c
 
