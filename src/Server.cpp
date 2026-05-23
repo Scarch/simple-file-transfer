@@ -37,8 +37,13 @@ void Server::start() {
     const FileMetadata incomingFile = receiveMetadata(socket);
     FileHandler fileHandler(m_outputDirectory, incomingFile);
 
-    // TODO: Add try-except for cases when issues might arise (and warn the client accordingly so they don't start sending data that we can't receive)
-    fileHandler.openForWrite();
+    try {
+        fileHandler.openForWrite();
+        sendStatus(socket, Status::Ok);
+    } catch (std::exception &e) {
+        sendError(socket, ErrorCode::WriteFailed, e.what());
+        throw;
+    }
 
     std::vector<char> writeBuffer(FileHandler::BUFFER_SIZE);
     uint64_t amountOfDataLeft = fileHandler.getFileSize();
@@ -49,9 +54,12 @@ void Server::start() {
         asio::read(socket, asio::buffer(writeBuffer, amountOfDataToWrite));
 
         if (!fileHandler.writeChunk(writeBuffer, amountOfDataToWrite)) {
-            // TODO: send an explicit failure response to the client once protocol-level acks/errors are implemented.
-            throw std::runtime_error("Failed to write received data to disk");
+            const std::string errorMessage = "Failed to write received data to disk";
+            sendError(socket, ErrorCode::WriteFailed, errorMessage);
+            throw std::runtime_error(errorMessage);
         }
+
+        sendStatus(socket, Status::Ok);
 
         amountOfDataLeft = amountOfDataLeft - amountOfDataToWrite;
     }
@@ -65,8 +73,12 @@ FileMetadata Server::receiveMetadata(tcp::socket &socket) {
     // Convert fileLength to host endianness
     const uint32_t fileNameLength = ntohl(networkFileNameLength);
 
+    // We validate the length before allocating/reading so a peer can't make us
+    // resize to multiple GB before we reject the request.
     if (fileNameLength == 0 || fileNameLength > MAX_FILENAME_LENGTH) {
-        throw std::invalid_argument("Invalid file name length");
+        const std::string errorMessage = "Invalid file name length";
+        sendError(socket, ErrorCode::InvalidFile, errorMessage);
+        throw std::runtime_error(errorMessage);
     }
 
     // Then we receive the name itself
@@ -75,7 +87,9 @@ FileMetadata Server::receiveMetadata(tcp::socket &socket) {
     asio::read(socket, asio::buffer(fileName, fileNameLength));
 
     if (!isSafeFileName(fileName)) {
-        throw std::invalid_argument("Unsafe file name in metadata");
+        const std::string errorMessage = "Unsafe file name in metadata";
+        sendError(socket, ErrorCode::InvalidFile, errorMessage);
+        throw std::runtime_error(errorMessage);
     }
 
     // Last thing we receive is the file size
@@ -84,6 +98,8 @@ FileMetadata Server::receiveMetadata(tcp::socket &socket) {
 
     // Convert fileSize to host endianness
     const uint64_t fileSize = networkToHost64(networkFileSize);
+
+    sendStatus(socket, Status::Ok);
 
     return FileMetadata(fileName, fileSize);
 }

@@ -21,8 +21,10 @@ void Client::sendFile(const std::string &filePath) {
     FileHandler fileHandler(filePath);
     fileHandler.openForRead();
 
-    // TODO: account for situations where sendMetadata might return false
     sendMetadata(fileHandler);
+
+    // We check whether the server failed to open up the FileHandler for writing
+    throwIfPeerError(m_socket);
 
     std::vector<char> readBuffer(FileHandler::BUFFER_SIZE);
     size_t bytesRead = 0;
@@ -30,14 +32,17 @@ void Client::sendFile(const std::string &filePath) {
     while ((bytesRead = fileHandler.readChunk(readBuffer)) > 0) {
         // We read only the necessary amount of data (bytesRead) from the buffer
         asio::write(m_socket, asio::buffer(readBuffer.data(), bytesRead));
+
+        // We check if the server successfully received the chunk
+        throwIfPeerError(m_socket);
     }
 }
 
-bool Client::sendMetadata(FileHandler &file) {
+void Client::sendMetadata(FileHandler &file) {
     std::string fileName = file.getFileName();
 
     // We send the file name length for the server before the name itself
-    const uint32_t fileNameLength = fileName.length();
+    const auto fileNameLength = static_cast<uint32_t>(fileName.length());
     uint32_t networkFileNameLength = htonl(fileNameLength);
     asio::write(m_socket, asio::buffer(&networkFileNameLength, sizeof(networkFileNameLength)));
 
@@ -49,11 +54,6 @@ bool Client::sendMetadata(FileHandler &file) {
     uint64_t networkFileSize = hostToNetwork64(file.getFileSize());
     asio::write(m_socket, asio::buffer(&networkFileSize, sizeof(networkFileSize)));
 
-    // TODO: add some sort of functionality so that client receives feedback from server whether server is ready to receive file data
-    // ...
-    // if (...) {
-    //     return false;
-    // }
-
-    return true;
+    // Receive status from the server
+    throwIfPeerError(m_socket);
 }

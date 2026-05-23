@@ -45,12 +45,6 @@ inline void sendError(asio::ip::tcp::socket &socket, ErrorCode errorCode, const 
 inline Status receiveStatus(asio::ip::tcp::socket &socket) {
     uint8_t rawStatus{};
     asio::read(socket, asio::buffer(&rawStatus, sizeof(rawStatus)));
-
-    // We verify that the status is valid
-    if (rawStatus > static_cast<uint8_t>(Status::Error)) {
-        throw std::runtime_error("Received invalid status");
-    }
-
     return static_cast<Status>(rawStatus);
 }
 
@@ -92,6 +86,24 @@ inline std::string getSimpleErrorMessage(ErrorCode errorCode) {
             return "Peer ran into an unrecognized error";
         }
     }
+}
+
+inline void throwIfPeerError(asio::ip::tcp::socket &socket) {
+    switch (receiveStatus(socket)) {
+        case Status::Ok: {
+            return;
+        }
+        case Status::Error: {
+            const auto [errorCode, message] = receiveError(socket);
+            std::string errorMessage = getSimpleErrorMessage(errorCode);
+            errorMessage += "\nError message received from peer: ";
+            errorMessage += message;
+            throw std::runtime_error(errorMessage);
+        }
+    }
+
+    // Reached only when the wire byte mapped to neither Ok nor Error
+    throw std::runtime_error("Received invalid status from peer");
 }
 
 // Problem: https://stackoverflow.com/questions/3022552/is-there-any-standard-htonl-like-function-for-64-bits-integers-in-c
