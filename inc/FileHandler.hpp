@@ -10,6 +10,8 @@ struct FileMetadata {
     uint64_t fileSize;
 };
 
+std::ostream &operator<<(std::ostream &os, const FileMetadata &fileMetadata);
+
 class FileHandler {
 public:
     enum class Mode {
@@ -54,3 +56,15 @@ private:
     std::fstream m_fileStream{};
     Mode m_currentMode{Mode::CLOSED};
 };
+
+inline std::string formatSize(const double bytesPerSec) {
+    std::string returnString{};
+    if (bytesPerSec <= 1024.0 * 1024) {
+        returnString += std::to_string(bytesPerSec / 1024.0);
+        returnString += " KiB";
+    } else {
+        returnString += std::to_string(bytesPerSec / (1024.0 * 1024));
+        returnString += " MiB";
+    }
+    return returnString;
+}

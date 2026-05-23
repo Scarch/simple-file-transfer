@@ -3,6 +3,11 @@
 #include <stdexcept>
 #include <algorithm>
 
+std::ostream & operator<<(std::ostream &os, const FileMetadata &fileMetadata) {
+    os << "{name='" << fileMetadata.fileName << "', size=" << formatSize(static_cast<double>(fileMetadata.fileSize)) << "}";
+    return os;
+}
+
 // We give m_fileSize a base value (real value depends on if we're receiving or sending a file and whether the file exists)
 FileHandler::FileHandler(const std::string &filePath) : m_filePath(filePath), m_fileMetadata(m_filePath.filename().string(), 0) {
 }
