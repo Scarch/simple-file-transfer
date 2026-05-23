@@ -85,7 +85,7 @@ void Server::start() {
 }
 
 FileMetadata Server::receiveMetadata(tcp::socket &socket) const {
-    // First we receive the length of the file nameshou
+    // First we receive the length of the file name
     uint32_t networkFileNameLength = 0;
     asio::read(socket, asio::buffer(&networkFileNameLength, sizeof(networkFileNameLength)));
 

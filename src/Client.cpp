@@ -1,3 +1,4 @@
+#include <chrono>
 #include "Client.hpp"
 #include "Protocol.hpp"
 using asio::ip::tcp;
