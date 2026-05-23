@@ -3,7 +3,6 @@
 #include "FileHandler.hpp"
 #include <asio.hpp>
 #include <filesystem>
-#include <cstdint>
 
 namespace fs = std::filesystem;
 using asio::ip::tcp;

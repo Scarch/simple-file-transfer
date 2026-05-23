@@ -2,7 +2,6 @@
 #include <string>
 #include "FileHandler.hpp"
 #include <asio.hpp>
-using asio::ip::tcp;
 
 // Client acts as the sender
 class Client {
@@ -15,7 +14,7 @@ private:
     asio::ip::address m_serverIp;
     asio::ip::port_type m_serverPort;
     asio::io_context &m_io_context;
-    tcp::socket m_socket;
+    asio::ip::tcp::socket m_socket;
 
     void sendMetadata(FileHandler &file);
 };
