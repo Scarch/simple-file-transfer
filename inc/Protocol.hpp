@@ -1,6 +1,110 @@
 #pragma once
 #include <asio.hpp>
 #include <bit>
+#include <string>
+#include <cstdint>
+#include <stdexcept>
+
+enum class Status : uint8_t {
+    Ok,
+    Error,
+};
+
+enum class ErrorCode : uint8_t {
+    Unknown,
+    WriteFailed,
+    InvalidPath,
+    InvalidFile,
+};
+
+constexpr uint32_t MAX_ERROR_MESSAGE_LENGTH{65535};
+
+struct ErrorInfo {
+    ErrorCode errorCode;
+    std::string message;
+};
+
+inline void sendStatus(asio::ip::tcp::socket &socket, Status status) {
+    // Status is 1 byte so there's no need to use htonl() to convert endianness
+    asio::write(socket, asio::buffer(&status, sizeof(status)));
+}
+
+inline void sendError(asio::ip::tcp::socket &socket, ErrorCode errorCode, const std::string &errorMessage) {
+    sendStatus(socket, Status::Error);
+
+    // errorCode is 1 byte so there's no need to use htonl() to convert endianness
+    asio::write(socket, asio::buffer(&errorCode, sizeof(errorCode)));
+
+    const auto errorMessageLength = static_cast<uint32_t>(errorMessage.length());
+    const uint32_t networkErrorMessageLength = htonl(errorMessageLength);
+    asio::write(socket, asio::buffer(&networkErrorMessageLength, sizeof(networkErrorMessageLength)));
+
+    asio::write(socket, asio::buffer(errorMessage));
+}
+
+inline Status receiveStatus(asio::ip::tcp::socket &socket) {
+    uint8_t rawStatus{};
+    asio::read(socket, asio::buffer(&rawStatus, sizeof(rawStatus)));
+    return static_cast<Status>(rawStatus);
+}
+
+inline ErrorInfo receiveError(asio::ip::tcp::socket &socket) {
+    // We assume the status has already been received
+
+    uint8_t rawErrorCode{};
+    asio::read(socket, asio::buffer(&rawErrorCode, sizeof(rawErrorCode)));
+    const auto errorCode = static_cast<ErrorCode>(rawErrorCode);
+
+    uint32_t networkErrorMessageLength{};
+    asio::read(socket, asio::buffer(&networkErrorMessageLength, sizeof(networkErrorMessageLength)));
+    const uint32_t errorMessageLength = ntohl(networkErrorMessageLength);
+
+    // We don't want to naively accept any message length
+    if (errorMessageLength > MAX_ERROR_MESSAGE_LENGTH) {
+        throw std::runtime_error("Received message length is over limit");
+    }
+
+    std::string errorMessage{};
+    errorMessage.resize(errorMessageLength);
+    asio::read(socket, asio::buffer(errorMessage, errorMessageLength));
+
+    return ErrorInfo{errorCode, errorMessage};
+}
+
+inline std::string getSimpleErrorMessage(ErrorCode errorCode) {
+    switch (errorCode) {
+        case ErrorCode::InvalidPath: {
+            return "Peer ran into invalid path error";
+        }
+        case ErrorCode::Unknown: {
+            return "Peer ran into an unknown error";
+        }
+        case ErrorCode::WriteFailed: {
+            return "Peer ran into a file writing error";
+        }
+        default: {
+            return "Peer ran into an unrecognized error";
+        }
+    }
+}
+
+inline void throwIfPeerError(asio::ip::tcp::socket &socket) {
+    switch (receiveStatus(socket)) {
+        case Status::Ok: {
+            return;
+        }
+        case Status::Error: {
+            const auto [errorCode, message] = receiveError(socket);
+            std::string errorMessage = getSimpleErrorMessage(errorCode);
+            errorMessage += "\nError message received from peer: ";
+            errorMessage += message;
+            throw std::runtime_error(errorMessage);
+        }
+    }
+
+    // Reached only when the wire byte mapped to neither Ok nor Error
+    throw std::runtime_error("Received invalid status from peer");
+}
 
 // Problem: https://stackoverflow.com/questions/3022552/is-there-any-standard-htonl-like-function-for-64-bits-integers-in-c
 
