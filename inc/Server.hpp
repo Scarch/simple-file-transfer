@@ -4,6 +4,7 @@
 #include "FileHandler.hpp"
 #include <asio.hpp>
 #include <filesystem>
+#include <optional>
 
 namespace fs = std::filesystem;
 using asio::ip::tcp;
@@ -24,5 +25,5 @@ private:
     fs::path m_outputDirectory;
     std::ostream &m_log;
 
-    FileMetadata receiveMetadata(tcp::socket &socket) const;
+    std::optional<FileMetadata> receiveMetadata(tcp::socket &socket);
 };

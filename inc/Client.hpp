@@ -1,15 +1,15 @@
 #pragma once
 #include <string>
 #include <iostream>
+#include <filesystem>
 #include "FileHandler.hpp"
 #include <asio.hpp>
 
-// Client acts as the sender
 class Client {
 public:
     Client(const std::string &serverIp, int serverPort, asio::io_context &io_context, std::ostream &log = std::cout);
 
-    void sendFile(const std::string &filePath);
+    void sendPath(const std::string &targetPath);
 
 private:
     asio::ip::address m_serverIp;
@@ -18,5 +18,6 @@ private:
     asio::ip::tcp::socket m_socket;
     std::ostream &m_log;
 
-    void sendMetadata(FileHandler &file);
+    void transmitSingleFile(const fs::path &filePath);
+    void sendMetadata(FileHandler& file);
 };

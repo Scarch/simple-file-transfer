@@ -9,7 +9,7 @@ enum class Mode {
 };
 
 struct CliArguments {
-    std::string ip;
+    std::optional<std::string> ip;
     int port{};
     Mode mode = Mode::Unknown;
     std::string filePath;

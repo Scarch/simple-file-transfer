@@ -66,7 +66,7 @@ inline ErrorInfo receiveError(asio::ip::tcp::socket &socket) {
 
     std::string errorMessage{};
     errorMessage.resize(errorMessageLength);
-    asio::read(socket, asio::buffer(errorMessage, errorMessageLength));
+    asio::read(socket, asio::buffer(errorMessage.data(), errorMessageLength));
 
     return ErrorInfo{errorCode, errorMessage};
 }

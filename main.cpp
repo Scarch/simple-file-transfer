@@ -24,8 +24,8 @@ int main(int argc, char* argv[]) {
         if (args.mode == Mode::Send) {
             std::cout << "[Client] Starting in Send mode...\n";
 
-            Client client(args.ip, args.port, io_context);
-            client.sendFile(args.filePath);
+            Client client(args.ip.value(), args.port, io_context);
+            client.sendPath(args.filePath);
         } else if (args.mode == Mode::Receive) {
             std::string outputDirectory = args.filePath.empty() ? "." : args.filePath;
 

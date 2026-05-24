@@ -96,14 +96,8 @@ std::optional<CliArguments> parse(int argc, char* argv[]) {
     }
 
     // -- Validation --
-
-    if (args.ip.empty()) {
-        std::cerr << "Error: IP is missing\n";
-        return std::nullopt;
-    }
-
-    if (!isValidIp(args.ip)) {
-        std::cerr << "Error: faulty IP address\n";
+    if (args.mode == Mode::Unknown) {
+        std::cerr << "Error: mode is missing (--send or --receive)\n";
         return std::nullopt;
     }
 
@@ -112,14 +106,21 @@ std::optional<CliArguments> parse(int argc, char* argv[]) {
         return std::nullopt;
     }
 
-    if (args.mode == Mode::Unknown) {
-        std::cerr << "Error: mode is missing (--send or --receive)\n";
-        return std::nullopt;
-    }
+    if (args.mode == Mode::Send) {
+        if (!args.ip.has_value() || args.ip->empty()) {
+            std::cerr << "Error: IP is missing (required for send mode)\n";
+            return std::nullopt;
+        }
 
-    if (args.mode == Mode::Send && args.filePath.empty()) {
-        std::cerr << "Error: send mode requires a file (--file)\n";
-        return std::nullopt;
+        if (!isValidIp(args.ip.value())) {
+            std::cerr << "Error: faulty IP address\n";
+            return std::nullopt;
+        }
+
+        if (args.filePath.empty()) {
+            std::cerr << "Error: send mode requires a file (--file)\n";
+            return std::nullopt;
+        }
     }
 
     return args;
