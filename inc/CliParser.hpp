@@ -12,8 +12,8 @@ struct CliArguments {
     std::string ip;
     int port{};
     Mode mode = Mode::Unknown;
-    std::string filePath;
+    std::string sourcePath;
+    std::string outputPath;
 };
 
-std::optional<CliArguments> parse(int argc, char* argv[]);
-
+std::optional<CliArguments> parse(int argc, char *argv[]);

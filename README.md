@@ -33,16 +33,17 @@ Check available CLI arguments:
 Run receiver (terminal 1):
 
 ```bash
-./build/simple-file-transfer --ip 127.0.0.1 -p 8080 --receive --file ./received
+./build/simple-file-transfer -p 8080 --receive --output ./received
 ```
 
 Run sender (terminal 2):
 
 ```bash
-./build/simple-file-transfer --ip 127.0.0.1 -p 8080 --send --file ./my_file.txt
+./build/simple-file-transfer --ip 127.0.0.1 -p 8080 --send --source ./my_file.txt
 ```
 
 Notes:
-- `--ip`, `--port` (`-p`), and mode (`--send` or `--receive`) are required.
-- `--file` is required in send mode.
-- In receive mode, if `--file` is omitted, files are saved to the current directory.
+- `--port` (`-p`) and mode (`--send` or `--receive`) are always required.
+- In send mode, `--ip` and `--source` (`-f`) are also required.
+- In receive mode, `--output` (`-o`) is optional and defaults to the current directory.
+- `--source` is only valid in send mode; `--output` is only valid in receive mode.

@@ -2,18 +2,19 @@
 #include <iostream>
 #include "asio/ip/address.hpp"
 
-bool isValidIp(const std::string& ip) {
+bool isValidIp(const std::string &ip) {
     asio::error_code ec;
     asio::ip::make_address(ip, ec);
     return !ec;
 }
 
-std::optional<CliArguments> parse(int argc, char* argv[]) {
+std::optional<CliArguments> parse(int argc, char *argv[]) {
     CliArguments args;
 
     if (argc == 1) {
         std::cerr << "Usage:\n"
-                  << "--ip <address> -p <port> (--send|--receive) [--file <path>]\n";
+                << "  Send:    --ip <address> -p <port> --send --source <path>\n"
+                << "  Receive: -p <port> --receive [--output <path>]\n";
         return std::nullopt;
     }
 
@@ -23,11 +24,12 @@ std::optional<CliArguments> parse(int argc, char* argv[]) {
         // HELP
         if (arg == "--help" || arg == "-h") {
             std::cout << "Usage:\n"
-                      << "  --ip <address>\n"
-                      << "  -p, --port <port>\n"
-                      << "  -s, --send\n"
-                      << "  -r, --receive\n"
-                      << "  -f, --file <path> (needed for send mode)\n";
+                    << "  --ip <address>          (send mode only)\n"
+                    << "  -p, --port <port>\n"
+                    << "  -s, --send\n"
+                    << "  -r, --receive\n"
+                    << "  -f, --source <path>     file or directory to send (send mode only)\n"
+                    << "  -o, --output <path>     directory to save into (receive mode, defaults to .)\n";
             return std::nullopt;
         }
 
@@ -77,13 +79,22 @@ std::optional<CliArguments> parse(int argc, char* argv[]) {
             args.mode = Mode::Receive;
         }
 
-        // FILE
-        else if (arg == "--file" || arg == "-f") {
+        // SOURCE
+        else if (arg == "--source" || arg == "-f") {
             if (i + 1 >= argc) {
-                std::cerr << "Error: --file needs a value\n";
+                std::cerr << "Error: --source needs a value\n";
                 return std::nullopt;
             }
-            args.filePath = argv[++i];
+            args.sourcePath = argv[++i];
+        }
+
+        // OUTPUT
+        else if (arg == "--output" || arg == "-o") {
+            if (i + 1 >= argc) {
+                std::cerr << "Error: --output needs a value\n";
+                return std::nullopt;
+            }
+            args.outputPath = argv[++i];
         }
 
         // UNKNOWN
@@ -115,8 +126,18 @@ std::optional<CliArguments> parse(int argc, char* argv[]) {
             return std::nullopt;
         }
 
-        if (args.filePath.empty()) {
-            std::cerr << "Error: send mode requires a file (--file)\n";
+        if (args.sourcePath.empty()) {
+            std::cerr << "Error: send mode requires a source path (--source)\n";
+            return std::nullopt;
+        }
+
+        if (!args.outputPath.empty()) {
+            std::cerr << "Error: --output is only valid in receive mode\n";
+            return std::nullopt;
+        }
+    } else if (args.mode == Mode::Receive) {
+        if (!args.sourcePath.empty()) {
+            std::cerr << "Error: --source is only valid in send mode\n";
             return std::nullopt;
         }
     }
