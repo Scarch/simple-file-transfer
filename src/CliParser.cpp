@@ -1,13 +1,11 @@
 #include "CliParser.hpp"
-
 #include <iostream>
-#include <regex>
+#include "asio/ip/address.hpp"
 
 bool isValidIp(const std::string& ip) {
-    static const std::regex pattern(
-    R"(^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$)"
-    );
-    return std::regex_match(ip, pattern);
+    asio::error_code ec;
+    asio::ip::make_address(ip, ec);
+    return !ec;
 }
 
 std::optional<CliArguments> parse(int argc, char* argv[]) {
@@ -96,17 +94,6 @@ std::optional<CliArguments> parse(int argc, char* argv[]) {
     }
 
     // -- Validation --
-
-    if (args.ip.empty()) {
-        std::cerr << "Error: IP is missing\n";
-        return std::nullopt;
-    }
-
-    if (!isValidIp(args.ip)) {
-        std::cerr << "Error: faulty IP address\n";
-        return std::nullopt;
-    }
-
     if (args.port == 0) {
         std::cerr << "Error: port is missing\n";
         return std::nullopt;
@@ -117,9 +104,21 @@ std::optional<CliArguments> parse(int argc, char* argv[]) {
         return std::nullopt;
     }
 
-    if (args.mode == Mode::Send && args.filePath.empty()) {
-        std::cerr << "Error: send mode requires a file (--file)\n";
-        return std::nullopt;
+    if (args.mode == Mode::Send) {
+        if (args.ip.empty()) {
+            std::cerr << "Error: IP is missing for send mode\n";
+            return std::nullopt;
+        }
+
+        if (!isValidIp(args.ip)) {
+            std::cerr << "Error: faulty IP address\n";
+            return std::nullopt;
+        }
+
+        if (args.filePath.empty()) {
+            std::cerr << "Error: send mode requires a file (--file)\n";
+            return std::nullopt;
+        }
     }
 
     return args;
